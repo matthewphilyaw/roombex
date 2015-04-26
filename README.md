@@ -1,2 +1,4 @@
-# roombex
-Elixir talking to a roomba
+Roombex
+=======
+
+Elixir app intended to be run on raspberry pi talking to a roomba
