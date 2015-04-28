@@ -31,7 +31,9 @@ defmodule Roombex.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [
+      {:hexate,  ">= 0.5.0"}
+    ]
   end
 end
 

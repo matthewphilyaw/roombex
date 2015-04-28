@@ -225,14 +225,12 @@ int main() {
         fnp = erl_element(1, tuplep);
 
         if (strncmp(ERL_ATOM_PTR(fnp), "open", 4) == 0) {
-            fprintf(stderr, "Open command found\n");
             port_name = erl_element(2, tuplep);
             port_speed = erl_element(3, tuplep);
             
             serial_fd =  serial_open(erl_iolist_to_string(port_name), 
                                      ERL_INT_VALUE(port_speed));
 
-            fprintf(stderr, "Port opened\n");
             res = 0;
         } else if (strncmp(ERL_ATOM_PTR(fnp), "send", 4) == 0) {
             fprintf(stderr, "Send command found\n");
@@ -240,7 +238,6 @@ int main() {
             serial_write(serial_fd,
                          ERL_BIN_PTR(data),
                          ERL_BIN_SIZE(data));
-            fprintf(stderr, "sent\n");
 
             res = 1;
         }
