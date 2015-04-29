@@ -9,12 +9,18 @@ defmodule Roomba do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
   
+  @doc """
+  Used to open serial port
+  """
   def open_port(pid, port_name, baud_rate) do
     Logger.debug "opening port - name: #{port_name} baud rate: #{baud_rate}" 
     
     GenServer.call(pid, {:open, port_name, baud_rate})
   end
   
+  @doc """
+  Start command for roomba
+  """
   def start(pid) do
     Logger.debug "start"
     
@@ -22,15 +28,22 @@ defmodule Roomba do
                    {:send,  << 128 :: size(1)-big-integer-unsigned-unit(8) >>}) 
   end
   
+  @doc """
+  Drive command for roomba
+  """
   def drive(pid, speed, angle) when 
     is_integer(speed) and speed >= -500 and speed <= 500 and
-    (is_atom(angle) and angle in [:straight, :clock_wise, :counter_clockwise]) or
-    (is_integer(angle) and angle >= -2000 and angle <= 2000) do
+    ((is_atom(angle) and angle in [:straight, :clockwise, :counter_clockwise]) or
+    (is_integer(angle) and angle >= -2000 and angle <= 2000)) do
          
+    # We know we have valide angle
+    # now lets transform the few special cases
+    # the actual values roomba needs
     angle = case angle do
       :straight -> 0x8000
-      :clock_wise -> -1
+      :clockwise -> -1
       :counter_clockwise -> 1
+      _ -> angle
     end
     
     Logger.debug "drive - speed: #{speed} angle: #{angle}"
@@ -44,7 +57,7 @@ defmodule Roomba do
   
   def init(:ok) do
     Process.flag(:trap_exit, true)
-    port = Port.open({:spawn, "priv_dir/serial"}, [{:packet, 2}, :binary])
+    port = Port.open({:spawn, "priv_dir/roomba_port"}, [{:packet, 2}, :binary])
     
     Logger.debug "created port"
     
@@ -90,10 +103,27 @@ defmodule Roomba do
     {:reply, :ok, state}
   end
   
-  def handle_info({_, {:data, data}} , state) do
+  def handle_info({_port, {:data, data}} , state={_port, _}) do
     msg = :erlang.binary_to_term(data)
-    
     Logger.debug "received - #{msg}"
-    {:noreply, state} 
+    
+    case msg do
+      :ok -> 
+        {:noreply, state}
+      _ -> 
+        {:stop, msg, state} 
+    end
+  end
+  
+  def handle_info(msg, state) do
+    Logger.debug "recieved message - #{msg}" 
+    
+    {:noreply, state}
+  end
+  
+  def handle_info({:EXIT, port, _}, state) do
+    Logger.error "port exited"
+    
+    {:stop, "port exited", state}
   end
 end
