@@ -1,4 +1,4 @@
-ERL_ROOT = /usr/lib/erlang
+ERL_ROOT = /usr/lib/erlang/usr
 CFLAGS=-pthread -I$(ERL_ROOT)/include -Ic_src
 LDFLAGS=-L$(ERL_ROOT)/lib
 LDLIBS=-lerl_interface -lei
