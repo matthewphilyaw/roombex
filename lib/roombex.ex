@@ -30,6 +30,37 @@ defmodule Roombex do
                    {:send,  << 128 :: size(1)-big-integer-unsigned-unit(8) >>}) 
   end
   
+  def power do
+    Logger.debug "start"
+    
+    GenServer.call(:roomba_server,
+                   {:send,  << 133 :: size(1)-big-integer-unsigned-unit(8) >>}) 
+  end
+  
+  def enable_control_mode do
+    Logger.debug "enable user mode"
+     
+     
+    GenServer.call(:roomba_server,
+                   {:send,  << 130 :: size(1)-big-integer-unsigned-unit(8) >>}) 
+  end
+  
+  def enable_safe_mode do
+    Logger.debug "enable safe mode"
+     
+     
+    GenServer.call(:roomba_server,
+                   {:send,  << 131 :: size(1)-big-integer-unsigned-unit(8) >>}) 
+  end
+  
+  def enable_full_mode do
+    Logger.debug "enable safe mode"
+     
+     
+    GenServer.call(:roomba_server,
+                   {:send,  << 132 :: size(1)-big-integer-unsigned-unit(8) >>}) 
+  end
+  
   @doc """
   Drive command for roomba
   """
