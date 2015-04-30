@@ -69,6 +69,10 @@ defmodule Roombex do
     ((is_atom(angle) and angle in [:straight, :clockwise, :counter_clockwise]) or
     (is_integer(angle) and angle >= -2000 and angle <= 2000)) do
          
+    # log original values, the output of the command from the handle_call
+    # will show more detail.
+    Logger.debug "drive - speed: #{speed} angle: #{angle}"
+    
     # We know we have valide angle
     # now lets transform the few special cases
     # the actual values roomba needs
@@ -79,7 +83,6 @@ defmodule Roombex do
       _ -> angle
     end
     
-    Logger.debug "drive - speed: #{speed} angle: #{angle}"
     
     GenServer.call(:roomba_server, 
                    {:send, << 137 :: size(1)-big-integer-unsigned-unit(8),
