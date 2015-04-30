@@ -126,7 +126,7 @@ defmodule Roombex do
   
   def handle_call({:send, command}, _from, state={port, :ready}) do
     hexified = Hexate.encode command
-    Logger.debug "sending command: #{hexified}"
+    Logger.debug "sending command - #{hexified}"
     
     Port.command(port, :erlang.term_to_binary({:send, command}))
     {:reply, :ok, state}
@@ -134,7 +134,7 @@ defmodule Roombex do
   
   def handle_call({:send_read, command}, _from, state={port, :ready}) do
     hexified = Hexate.encode command
-    Logger.debug "sending sensor command: #{hexified}"
+    Logger.debug "sending sensor command - #{hexified}"
     
     Port.command(port, :erlang.term_to_binary({:send_read, command}))
     {:reply, :ok, state}
