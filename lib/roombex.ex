@@ -34,28 +34,57 @@ defmodule Roombex do
     {:ok, {port, :not_ready}}
   end 
 
-  # think I need this to say complete
-  def handle_cast({:do_commands, []}, state) do
-    {:noreply, state}
+  @doc """
+    do_commands takes a list of commands like
+    [{:drive, 100, :straight}, {:sleep, 1000}, {:drive, 0, :straight}]
+
+    walks the list trasnforming taking the head of the list, transforming it
+    into the form needed to send to the roomba then call do_commands until the
+    list is empty. 
+
+    sleep is a special case where we don't have to call out to the roomba
+    instead we use apply_after below to continue with the next item in the list
+    after timout value. So the in example above you drive straight for 1 second
+    and then stop. 
+  """
+  def handle_cast({:do_commands, commands}, state) do
+    case get_command commands do
+      :ok -> 
+        {:noreply, state}
+      {:ok, {:sleep, value}, rest} ->
+        Logger.debug "sleeping for #{value}"
+        :timer.apply_after(value, GenServer, :cast, [:roomba_server,
+                                                    {:do_commands, rest}])
+        {:noreply, state}
+      {:ok, cmd, rest} ->
+        GenServer.cast(:roomba_server, cmd)
+        GenServer.cast(:roomba_server, {:do_commands, rest})
+
+        {:noreply, state}
+    end
   end
 
-  def handle_cast({:do_commands, [{:sleep, value}|rest]}, state) do
-    Logger.debug "sleep - #{value}"
+  @doc """
+    Both send and send_read send message to the c port that talks
+    to the serial port. only distinguished by the atom :send/:send_read
+    which tells the port that it should either just send the data down the wire
+    and return or, send and read back the bytes sent from the roomba. 
 
-    :timer.sleep value
+    Roomba only sends back information when a sensor command was sent to it.
+  """
+  def handle_cast({:send, command}, state={port, :ready}) do
+    hexified = Hexate.encode command
+    Logger.debug "sending command - #{hexified}"
     
-    # async - recursively call do_commands untill no more are in the list
-    GenServer.cast(:roomba_server, {:do_commands, rest})
-
+    Port.command(port, :erlang.term_to_binary({:send, command}))
     {:noreply, state}
   end
-
-  def handle_cast({:do_commands, [h|rest]}, state) do
-    {:ok, parsed_command} = create_command h 
-
-    GenServer.cast(:roomba_server, parsed_command)
-    GenServer.cast(:roomba_server, {:do_commands, rest})
-
+  
+  def handle_cast({:send_read, command}, state={port, :ready}) do
+    hexified = Hexate.encode command
+    Logger.debug "sending sensor command - #{hexified}"
+    
+    Port.command(port, :erlang.term_to_binary({:send_read, command}))
     {:noreply, state}
   end
   
@@ -81,22 +110,6 @@ defmodule Roombex do
     Port.command(port, :erlang.term_to_binary({:open, port_name, baud_rate}))
     
     {:reply, :ok, {port, :ready}}
-  end
-  
-  def handle_cast({:send, command}, state={port, :ready}) do
-    hexified = Hexate.encode command
-    Logger.debug "sending command - #{hexified}"
-    
-    Port.command(port, :erlang.term_to_binary({:send, command}))
-    {:noreply, state}
-  end
-  
-  def handle_cast({:send_read, command}, state={port, :ready}) do
-    hexified = Hexate.encode command
-    Logger.debug "sending sensor command - #{hexified}"
-    
-    Port.command(port, :erlang.term_to_binary({:send_read, command}))
-    {:noreply, state}
   end
   
   def handle_info({port, {:data, data}} , state={port, _}) do
@@ -125,6 +138,19 @@ defmodule Roombex do
 
   # private 
   #----------------------------------------------------------------------------
+
+  defp get_command([]) do
+    :ok
+  end
+
+  defp get_command([cmd={:sleep, _}|rest]) do
+    {:ok, cmd, rest}
+  end
+
+  defp get_command([h|rest]) do
+    {:ok, cmd} = create_command(h)
+    {:ok, cmd, rest}
+  end
 
   defp create_command(:start) do
     Logger.debug "start"
