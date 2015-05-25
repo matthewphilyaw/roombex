@@ -19,7 +19,7 @@ defmodule Roombex.Mixfile do
   # Type `mix help compile.app` for more information
   def application do
     [applications: [:logger],
-     mod: {Roombex, []}]
+     mod: {Roombex, ["/dev/pts/1", "115200"]}]
   end
 
   # Dependencies can be Hex packages:

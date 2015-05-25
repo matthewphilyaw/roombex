@@ -3,12 +3,12 @@ defmodule Roombex do
 
   # see http://elixir-lang.org/docs/stable/elixir/application.html
   # for more information on otp applications
-  def start(_type, _args) do
+  def start(_type, [port_name, baudrate]) do
     import Supervisor.Spec, warn: false
 
     children = [
       # define workers and child supervisors to be supervised
-      worker(Roombex.Roomba, [<<"/dev/pts/1">>, <<"115200">>]),
+      worker(Roombex.Roomba, [port_name, baudrate]),
       worker(Roombex.Pilot, [])
     ]
 

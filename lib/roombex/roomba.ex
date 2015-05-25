@@ -17,8 +17,8 @@ defmodule Roombex.Roomba do
   def init({port_name, baud_rate}) do
     Process.flag(:trap_exit, true)
 
-    port_arg = <<"-D">> <> port_name
-    baud_arg = <<"-b">> <> baud_rate
+    port_arg = "-D" <> port_name
+    baud_arg = "-b" <> baud_rate
 
     port = Port.open({:spawn_executable, @cport_name}, 
                      [{:packet, 2}, 
@@ -59,7 +59,7 @@ defmodule Roombex.Roomba do
   end
   
   def handle_info({:EXIT, _port, reason}, state) do
-    Logger.error "port exited for #{reason}"
+    Logger.error "port exited #{reason}"
     
     {:stop, "port exited", state}
   end
