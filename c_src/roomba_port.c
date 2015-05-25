@@ -1,4 +1,6 @@
 #include <time.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #include "erl_interface.h"
 #include "ei.h"
@@ -53,7 +55,37 @@ write_exact(byte *buf, int len)
     return (len);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    char *device_name;
+    char *baudrate;
+    int flag;
+
+    while ((flag = getopt(argc, argv, "D:b:")) != -1) {
+        switch (flag) {
+            case 'D':
+                device_name = optarg;
+                break;
+            case 'b':
+                baudrate = optarg;
+                break;
+            case '?':
+                if (optopt == 'D' || optopt == 'b')
+                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+                else if (isprint (optopt))
+                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf (stderr,
+                             "Unknown option character `\\x%x'.\n",
+                             optopt);
+
+                fprintf (stderr, "Going bye bye");
+                return 1;
+            default:
+                fprintf (stderr, "Going bye bye");
+                abort();
+        } 
+    }
+
     // setup timeout for calls
     struct timespec ts;
     ts.tv_sec = 0;
@@ -62,29 +94,29 @@ int main() {
     int serial_fd = 0;
     
     ETERM *tuplep, *intp;
-    ETERM *fnp, *port_name, *port_speed, *room_command;
+    ETERM *fnp, *room_command;
     int res;
     byte buf[100];
     long allocated, freed;
 
     erl_init(NULL, 0);
 
+    res = serial_open(device_name,
+                      strtol(baudrate, (char **)NULL, 10),
+                      &serial_fd);
+
+    intp = erl_mk_atom(get_error_msg(res));
+    erl_encode(intp, buf);
+    write_cmd(buf, erl_term_len(intp));
+
+    erl_free_term(fnp);
+    erl_free_term(intp);
+
     while (read_cmd(buf) > 0) {
         res = OK;
         tuplep = erl_decode(buf);
         fnp = erl_element(1, tuplep);
-
-        if (strncmp(ERL_ATOM_PTR(fnp), "open", 4) == 0) {
-            port_name = erl_element(2, tuplep);
-            port_speed = erl_element(3, tuplep);
-            
-            res = serial_open(erl_iolist_to_string(port_name),
-                                    ERL_INT_VALUE(port_speed),
-                                    &serial_fd);
-            
-            erl_free_term(port_name);
-            erl_free_term(port_speed);
-        } else if (strncmp(ERL_ATOM_PTR(fnp), "send", 4) == 0) {
+        if (strncmp(ERL_ATOM_PTR(fnp), "send", 4) == 0) {
             room_command = erl_element(2, tuplep); 
             
             serial_write(serial_fd,
