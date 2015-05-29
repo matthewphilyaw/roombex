@@ -77,11 +77,8 @@ int main(int argc, char **argv) {
                     fprintf (stderr,
                              "Unknown option character `\\x%x'.\n",
                              optopt);
-
-                fprintf (stderr, "Going bye bye");
                 return 1;
             default:
-                fprintf (stderr, "Going bye bye");
                 abort();
         } 
     }
@@ -116,17 +113,27 @@ int main(int argc, char **argv) {
         res = OK;
         tuplep = erl_decode(buf);
         fnp = erl_element(1, tuplep);
-        if (strncmp(ERL_ATOM_PTR(fnp), "send", 4) == 0) {
+        if (strncmp(ERL_ATOM_PTR(fnp), "command", 7) == 0) {
             room_command = erl_element(2, tuplep); 
             
-            serial_write(serial_fd,
-                         ERL_BIN_PTR(room_command),
-                         ERL_BIN_SIZE(room_command));
+            res = serial_write(serial_fd,
+                               ERL_BIN_PTR(room_command),
+                               ERL_BIN_SIZE(room_command));
 
-            res = OK;
+            nanosleep(&ts, NULL);
+            
+            erl_free_term(room_command);
+        } else if (strncmp(ERL_ATOM_PTR(fnp), "sensor", 6) == 0) {
+            room_command = erl_element(2, tuplep); 
+            
+            res = serial_write(serial_fd,
+                               ERL_BIN_PTR(room_command),
+                               ERL_BIN_SIZE(room_command));
             
             nanosleep(&ts, NULL);
             
+            // need to read data
+
             erl_free_term(room_command);
         }
 

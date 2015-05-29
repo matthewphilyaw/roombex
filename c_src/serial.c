@@ -132,4 +132,6 @@ int serial_speed(int fd, int bitrate) {
 
 int serial_write(int fd, byte *buf, int bytes) {
     if (write(fd, buf, bytes) < 0) return UNABLE_TO_WRITE_DATA; 
+
+    return OK;
 }

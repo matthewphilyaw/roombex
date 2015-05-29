@@ -2,6 +2,8 @@ defmodule Roombex.Roomba do
   require Logger
   use GenServer
 
+  alias Roombex.Command
+
   @cport_name "priv_dir/roomba_port"
   
   def start_link(port_name, baud_rate) do
@@ -31,18 +33,18 @@ defmodule Roombex.Roomba do
   end 
 
   def handle_cast({:send, command}, port) do
-    hexified = Hexate.encode command
-    Logger.debug "sending command - #{hexified}"
-    
-    Port.command(port, :erlang.term_to_binary({:send, command}))
+    cmd = Command.transform(command)
+
+    Port.command(port, :erlang.term_to_binary({:command, cmd}))
+
     {:noreply, port}
   end
   
   def handle_cast({:send_read, command}, port) do
-    hexified = Hexate.encode command
-    Logger.debug "sending sensor command - #{hexified}"
+    cmd = Command.transform(command)
     
-    Port.command(port, :erlang.term_to_binary({:send_read, command}))
+    Port.command(port, :erlang.term_to_binary({:sensor, cmd}))
+
     {:noreply, port}
   end
 

@@ -73,3 +73,8 @@ defmodule Drive do
     end
   end
 end
+
+defmodule Sleep do
+  defstruct val: 0
+
+end
