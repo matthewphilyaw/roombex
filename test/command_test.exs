@@ -79,6 +79,42 @@ defmodule CommandTest do
     assert result == expect
   end 
 
+  test "drive with angle equal to max succeeds -- value used 2000" do
+    expect = {:ok, << 137 :: size(1)-big-integer-unsigned-unit(8),
+              0 :: size(2)-big-integer-signed-unit(8),
+              2000 :: size(2)-big-integer-signed-unit(8) >>}
+ 
+    result  = Command.transform(%Drive{angle: 2000})
+    assert result == expect
+  end 
+
+  test "drive with angle equal to :straight succeeds" do
+    expect = {:ok, << 137 :: size(1)-big-integer-unsigned-unit(8),
+              0 :: size(2)-big-integer-signed-unit(8),
+              0x8000 :: size(2)-big-integer-signed-unit(8) >>}
+ 
+    result  = Command.transform(%Drive{angle: :straight})
+    assert result == expect
+  end 
+
+  test "drive with angle equal to :clockwise succeeds" do
+    expect = {:ok, << 137 :: size(1)-big-integer-unsigned-unit(8),
+              0 :: size(2)-big-integer-signed-unit(8),
+              -1 :: size(2)-big-integer-signed-unit(8) >>}
+ 
+    result  = Command.transform(%Drive{angle: :clockwise})
+    assert result == expect
+  end 
+
+  test "drive with angle equal to :counter_clockwise succeeds" do
+    expect = {:ok, << 137 :: size(1)-big-integer-unsigned-unit(8),
+              0 :: size(2)-big-integer-signed-unit(8),
+              1 :: size(2)-big-integer-signed-unit(8) >>}
+ 
+    result  = Command.transform(%Drive{angle: :counter_clockwise})
+    assert result == expect
+  end 
+
   test "Drive with speed greater than 500 fails -- value used 501" do
     {result, _} = Command.transform(%Drive{speed: 501})
     assert result == :error
