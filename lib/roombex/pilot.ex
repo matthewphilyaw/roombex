@@ -4,7 +4,7 @@ defmodule Roombex.Pilot do
   alias Roombex.Roomba
 
   def start_link() do
-    GenServer.start_link(__MODULE__, :ok, name: :roomba_pilot) 
+    GenServer.start_link(__MODULE__, :ok, name: :roomba_pilot)
   end
 
   def do_commands([]) do
@@ -20,8 +20,7 @@ defmodule Roombex.Pilot do
 
   def init(:ok) do
     {:ok, []}
-  end 
-
+  end
 
   def handle_cast({:do_commands, commands}, _state) do
     GenServer.cast(:roomba_pilot, :do_command)
