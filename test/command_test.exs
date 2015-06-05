@@ -139,4 +139,9 @@ defmodule CommandTest do
     {result, _} = Command.transform(%Drive{angle: :foobar})
     assert result == :error
   end
+
+  test "Sleep returns an error, because it doesn't implement the Roombex.Command protocol" do
+    {result, _} = Command.transform(%Sleep{})
+    assert result == :error
+  end
 end
