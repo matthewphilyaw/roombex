@@ -15,19 +15,16 @@ defmodule Roombex.Roomba do
   end
 
   # --- call backs
-
   def init({port_name, baud_rate}) do
     Process.flag(:trap_exit, true)
 
-    port_arg = "-D" <> port_name
-    baud_arg = "-b" <> baud_rate
 
     port = Port.open({:spawn_executable, @cport_name},
                      [{:packet, 2},
                       :binary,
-                      {:args, [port_arg, baud_arg]}])
+                      {:args, [port_name, baud_rate]}])
 
-    Logger.debug "created port"
+    Logger.debug fn -> "created port" end
 
     {:ok, port}
   end
@@ -35,7 +32,13 @@ defmodule Roombex.Roomba do
   def handle_cast({:send, command}, port) do
     cmd = Command.transform(command)
 
-    Port.command(port, :erlang.term_to_binary({:command, cmd}))
+    lst_int = for << x :: size(1)-integer-unsigned-unit(8) <- cmd >>, do: x
+
+    {:ok, json} = JSX.encode %{ message_type: 3,
+                                subtype: 0,
+                                data: lst_int }
+
+    Port.command port, json
 
     {:noreply, port}
   end
@@ -43,31 +46,26 @@ defmodule Roombex.Roomba do
   def handle_cast({:send_read, command}, port) do
     cmd = Command.transform(command)
 
-    Port.command(port, :erlang.term_to_binary({:sensor, cmd}))
+    Logger.debug fn -> "not implemented" end
 
     {:noreply, port}
   end
 
   def handle_info({port, {:data, data}}, port) do
     msg = :erlang.binary_to_term(data)
-    Logger.debug "received - #{msg}"
+    Logger.debug fn -> "received - #{msg}" end
 
-    case msg do
-      :ok ->
-        {:noreply, port}
-      _ ->
-        {:stop, msg, port}
-    end
+    {:noreply, port}
   end
 
   def handle_info({:EXIT, _port, reason}, state) do
-    Logger.error "port exited #{reason}"
+    Logger.error fn -> "port exited #{reason}" end
 
     {:stop, "port exited", state}
   end
 
   def handle_info(msg, state) do
-    Logger.debug "recieved message - #{msg}"
+    Logger.debug fn -> "recieved message - #{msg}" end
 
     {:noreply, state}
   end
