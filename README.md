@@ -10,6 +10,8 @@ I have run this on both ubuntu and arch, I run arch primarily but used ubuntu a 
 Building
 ========
 
+Note: The rust port is cross compilled following the instructions [here](https://github.com/Ogeon/rust-on-raspberry-pi). The make file assume cross64 script is in the path. I cross compile using an ubuntu image. Also note that debug statements may look a bit different than listed below, but that's all that should be different.
+
 If you are running locally I recommend using socat or some serial emulator if you want to test it so I run the following from the command line before running the app:
 
 ```shell
