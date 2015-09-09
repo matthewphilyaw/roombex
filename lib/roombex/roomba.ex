@@ -35,8 +35,6 @@ defmodule Roombex.Roomba do
 
     {:ok, json} = JSX.encode %{ message_type: 3,
                                 subtype: 0,
-                                port_name: "",
-                                baudrate: 0,
                                 data: lst_int }
 
     Port.command port, json

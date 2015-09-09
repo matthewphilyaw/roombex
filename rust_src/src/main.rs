@@ -20,8 +20,6 @@ use serial::prelude::*;
 struct IncomingMessage {
     message_type: u8,
     subtype: u8,
-    port_name: String,
-    baudrate: usize,
     data: Vec<u8>
 }
 
@@ -129,8 +127,8 @@ fn parse_msg(stdin: &io::Stdin) -> Result<IncomingMessage, String> {
     // If we didn't get two bytes to start something went
     // wrong. Read could return less than the buffer
     if res != 2 {
-        error!("expected exactly two bytes in this state, got less");
-        panic!("expected exactly to bytes to begin message and got less");
+        error!("expected exactly two bytes to begin message and got less");
+        panic!("expected exactly two bytes to begin message and got less");
     }
 
     // The size of the message that erlang is sending.
