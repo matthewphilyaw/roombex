@@ -21,7 +21,6 @@ defmodule Roombex.Roomba do
 
     port = Port.open({:spawn_executable, @cport_name},
                      [{:packet, 2},
-                      :binary,
                       {:args, [port_name, baud_rate]}])
 
     Logger.debug fn -> "created port" end
@@ -30,12 +29,14 @@ defmodule Roombex.Roomba do
   end
 
   def handle_cast({:send, command}, port) do
-    cmd = Command.transform(command)
+    {:ok, cmd} = Command.transform(command)
 
     lst_int = for << x :: size(1)-integer-unsigned-unit(8) <- cmd >>, do: x
 
     {:ok, json} = JSX.encode %{ message_type: 3,
                                 subtype: 0,
+                                port_name: "",
+                                baudrate: 0,
                                 data: lst_int }
 
     Port.command port, json
@@ -52,8 +53,7 @@ defmodule Roombex.Roomba do
   end
 
   def handle_info({port, {:data, data}}, port) do
-    msg = :erlang.binary_to_term(data)
-    Logger.debug fn -> "received - #{msg}" end
+    Logger.debug fn -> "received - #{data}" end
 
     {:noreply, port}
   end

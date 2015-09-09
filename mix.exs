@@ -6,20 +6,20 @@ defmodule Roombex.Mixfile do
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     compilers: [:make, :elixir, :app],
+     compilers: [:elixir, :app],
      aliases: aliases,
      deps: deps]
   end
 
   defp aliases do
-    [clean: ["clean", "clean.make"]] 
+    [clean: ["clean"]] 
   end
   # Configuration for the OTP application
   #
   # Type `mix help compile.app` for more information
   def application do
     [applications: [:logger],
-     mod: {Roombex, ["/dev/pts/1", "115200"]}]
+     mod: {Roombex, ["/dev/pts/3", "115200"]}]
   end
 
   # Dependencies can be Hex packages:
