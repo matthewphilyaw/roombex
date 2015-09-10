@@ -1,5 +1,3 @@
-#![feature(convert)]
-
 #[macro_use]
 extern crate log;
 extern crate env_logger;
@@ -33,16 +31,10 @@ struct OutgoingMessage {
 
 fn translate_baudrate(baudrate: usize) -> serial::BaudRate {
     match baudrate {
-        50 => serial::Baud50,
-        75 => serial::Baud75,
         110 => serial::Baud110,
-        134 => serial::Baud134,
-        150 => serial::Baud150,
-        200 => serial::Baud200,
         300 => serial::Baud300,
         600 => serial::Baud600,
         1200 => serial::Baud1200,
-        1800 => serial::Baud1800,
         2400 => serial::Baud2400,
         4800 => serial::Baud4800,
         9600 => serial::Baud9600,
@@ -50,21 +42,22 @@ fn translate_baudrate(baudrate: usize) -> serial::BaudRate {
         38400 => serial::Baud38400,
         57600 => serial::Baud57600,
         115200 => serial::Baud115200,
-        230400 => serial::Baud230400,
         s => serial::BaudOther(s) 
     }
 }
 
 fn interact<T: SerialPort>(port: &mut T, stdin: &io::Stdin, stdout: &io::Stdout, baudrate: usize) -> io::Result<()> {
-    try!(port.configure(|settings| {
-        settings.set_baud_rate(translate_baudrate(baudrate));
-        settings.set_char_size(serial::Bits8);
-        settings.set_parity(serial::ParityNone);
-        settings.set_stop_bits(serial::Stop1);
-        settings.set_flow_control(serial::FlowNone);
-    }));
+    let baudrate_translated = translate_baudrate(baudrate);
+    let settings = serial::PortSettings {
+        baud_rate: baudrate_translated,
+        char_size: serial::Bits8,
+        parity: serial::ParityNone,
+        stop_bits: serial::Stop1,
+        flow_control: serial::FlowNone
+    };
 
-    port.set_timeout(Duration::milliseconds(100));
+    try!(port.configure(&settings));
+    try!(port.set_timeout(Duration::milliseconds(100)));
 
     debug!("port is ready");
 
@@ -182,14 +175,14 @@ fn send_msg(stdout: &io::Stdout, msg: OutgoingMessage) {
 
     // as_str() is needed to go to &str type,
     // and from there we can as_bytes to take it to [u8]
-    let js_ret_bytes = js_ret_str.as_str().as_bytes();
+    let js_ret_bytes = js_ret_str.into_bytes();
 
     let size_buf: &mut [u8] = &mut [((js_ret_bytes.len() >> 8) & 0xff) as u8,
                                     (js_ret_bytes.len() & 0xff) as u8];
 
     // don't care about the return value in this case
     let _ = stdout.lock().write_all(size_buf);
-    let _ = stdout.lock().write_all(js_ret_bytes);
+    let _ = stdout.lock().write_all(&js_ret_bytes);
     let _ = stdout.lock().flush(); // need to ensure the buffer is flushed
 }
 
