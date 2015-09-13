@@ -4,11 +4,33 @@ extern crate env_logger;
 extern crate serial;
 extern crate time;
 
+#[cfg(target_arch = "arm")]
+extern crate cupi;
+
 use std::env;
 use std::io;
 use std::io::prelude::*;
 use time::Duration;
 use serial::prelude::*;
+
+#[cfg(target_arch = "arm")]
+use cupi::{CuPi, delay_ms, DigitalWrite};
+
+
+#[cfg(target_arch = "arm")]
+fn switch_on_roomba() {
+    let cupi = CuPi::new().unwrap();
+    let mut pinout = cupi.pin(1).unwrap().set(1).output();
+
+    // pull low for 500ms to turn roomba on.
+    pinout.set(0).unwrap();
+    delay_ms(500);
+}
+
+#[cfg(not(target_arch = "arm"))]
+fn switch_on_roomba() {
+    debug!("not supported on this platform.");
+}
 
 fn main() {
     env_logger::init().unwrap();
@@ -37,6 +59,7 @@ fn main() {
     let _ = port.configure(&settings);
     let _ = port.set_timeout(Duration::milliseconds(100));
 
+    switch_on_roomba();
     debug!("port is ready");
 
     loop {

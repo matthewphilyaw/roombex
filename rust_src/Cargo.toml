@@ -8,3 +8,6 @@ log = "0.3.2"
 env_logger = "0.3.1"
 serial = "0.2.0"
 time = "0.1.32"
+
+[target.arm-unknown-linux-gnueabihf.dependencies]
+cupi = "0.1.0"
