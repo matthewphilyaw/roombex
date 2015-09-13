@@ -10,45 +10,6 @@ use std::io::prelude::*;
 use time::Duration;
 use serial::prelude::*;
 
-fn translate_baudrate(baudrate: usize) -> serial::BaudRate {
-    match baudrate {
-        110 => serial::Baud110,
-        300 => serial::Baud300,
-        600 => serial::Baud600,
-        1200 => serial::Baud1200,
-        2400 => serial::Baud2400,
-        4800 => serial::Baud4800,
-        9600 => serial::Baud9600,
-        19200 => serial::Baud19200,
-        38400 => serial::Baud38400,
-        57600 => serial::Baud57600,
-        115200 => serial::Baud115200,
-        s => serial::BaudOther(s) 
-    }
-}
-
-fn parse_msg(stdin: &io::Stdin) -> Result<Vec<u8>, String> {
-    let mut erl_buf = &mut [0u8; 2];
-    let res = stdin.lock().read(erl_buf).unwrap();
-
-    // If we didn't get two bytes to start something went
-    // wrong. Read could return less than the buffer
-    if res != 2 {
-        error!("expected exactly two bytes to begin message and got less");
-        panic!("expected exactly two bytes to begin message and got less");
-    }
-
-    let size: usize = (erl_buf[1] as usize) | ((erl_buf[0] as usize) << 8);
-
-    let mut msg_buf: &mut Vec<u8> = &mut Vec::new();
-    let bytes_read = stdin.lock().take(size as u64).read_to_end(msg_buf).unwrap();
-
-    match bytes_read == size {
-        true => Ok(msg_buf.to_owned()),
-        _ => Err("something went wrong, the size of the message doesn't match the actual bytes read".to_string())
-    }
-}
-
 fn main() {
     env_logger::init().unwrap();
 
@@ -96,4 +57,43 @@ fn main() {
             _ => continue
         };
     };
+}
+
+fn parse_msg(stdin: &io::Stdin) -> Result<Vec<u8>, String> {
+    let mut erl_buf = &mut [0u8; 2];
+    let res = stdin.lock().read(erl_buf).unwrap();
+
+    // If we didn't get two bytes to start something went
+    // wrong. Read could return less than the buffer
+    if res != 2 {
+        error!("expected exactly two bytes to begin message and got less");
+        panic!("expected exactly two bytes to begin message and got less");
+    }
+
+    let size: usize = (erl_buf[1] as usize) | ((erl_buf[0] as usize) << 8);
+
+    let mut msg_buf: &mut Vec<u8> = &mut Vec::new();
+    let bytes_read = stdin.lock().take(size as u64).read_to_end(msg_buf).unwrap();
+
+    match bytes_read == size {
+        true => Ok(msg_buf.to_owned()),
+        _ => Err("something went wrong, the size of the message doesn't match the actual bytes read".to_string())
+    }
+}
+
+fn translate_baudrate(baudrate: usize) -> serial::BaudRate {
+    match baudrate {
+        110 => serial::Baud110,
+        300 => serial::Baud300,
+        600 => serial::Baud600,
+        1200 => serial::Baud1200,
+        2400 => serial::Baud2400,
+        4800 => serial::Baud4800,
+        9600 => serial::Baud9600,
+        19200 => serial::Baud19200,
+        38400 => serial::Baud38400,
+        57600 => serial::Baud57600,
+        115200 => serial::Baud115200,
+        s => serial::BaudOther(s) 
+    }
 }
