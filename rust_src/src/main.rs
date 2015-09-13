@@ -16,22 +16,6 @@ use serial::prelude::*;
 #[cfg(target_arch = "arm")]
 use cupi::{CuPi, delay_ms, DigitalWrite};
 
-
-#[cfg(target_arch = "arm")]
-fn switch_on_roomba() {
-    let cupi = CuPi::new().unwrap();
-    let mut pinout = cupi.pin(1).unwrap().set(1).output();
-
-    // pull low for 500ms to turn roomba on.
-    pinout.set(0).unwrap();
-    delay_ms(500);
-}
-
-#[cfg(not(target_arch = "arm"))]
-fn switch_on_roomba() {
-    debug!("not supported on this platform.");
-}
-
 fn main() {
     env_logger::init().unwrap();
 
@@ -68,13 +52,7 @@ fn main() {
             _ => continue
         };
 
-        // supporting only type 3 which is command at the moment
-        // others are:
-        // 1 -> open port (handled earlier)
-        // 2 -> change baud rate
-        // 4 -> sensor message
-        // _ -> uknown so panic
-        //        match port.write(&buf[..]) {
+        // 0x01 -> send only
         let _ = match msg[0] {
             0x01 => port.write(&msg[1..]),
             _ => continue
@@ -102,6 +80,21 @@ fn parse_msg(stdin: &io::Stdin) -> Result<Vec<u8>, String> {
         true => Ok(msg_buf.to_owned()),
         _ => Err("something went wrong, the size of the message doesn't match the actual bytes read".to_string())
     }
+}
+
+#[cfg(target_arch = "arm")]
+fn switch_on_roomba() {
+    let cupi = CuPi::new().unwrap();
+    let mut pinout = cupi.pin(1).unwrap().set(1).output();
+
+    // pull low for 500ms to turn roomba on.
+    pinout.set(0).unwrap();
+    delay_ms(500);
+}
+
+#[cfg(not(target_arch = "arm"))]
+fn switch_on_roomba() {
+    debug!("not supported on this platform.");
 }
 
 fn translate_baudrate(baudrate: usize) -> serial::BaudRate {
