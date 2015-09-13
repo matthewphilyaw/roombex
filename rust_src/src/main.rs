@@ -27,41 +27,6 @@ fn translate_baudrate(baudrate: usize) -> serial::BaudRate {
     }
 }
 
-fn interact<T: SerialPort>(port: &mut T, stdin: &io::Stdin, stdout: &io::Stdout, baudrate: usize) {
-    let baudrate_translated = translate_baudrate(baudrate);
-    let settings = serial::PortSettings {
-        baud_rate: baudrate_translated,
-        char_size: serial::Bits8,
-        parity: serial::ParityNone,
-        stop_bits: serial::Stop1,
-        flow_control: serial::FlowNone
-    };
-
-    let _ = port.configure(&settings);
-    let _ = port.set_timeout(Duration::milliseconds(100));
-
-    debug!("port is ready");
-
-    loop {
-        let msg = match parse_msg(&stdin) {
-            Ok(m) => m,
-            _ => continue
-        };
-
-        // supporting only type 3 which is command at the moment
-        // others are:
-        // 1 -> open port (handled earlier)
-        // 2 -> change baud rate
-        // 4 -> sensor message
-        // _ -> uknown so panic
-        //        match port.write(&buf[..]) {
-        let _ = match msg[0] {
-            0x01 => port.write(&msg[1..]),
-            _ => continue
-        };
-    };
-}
-
 fn parse_msg(stdin: &io::Stdin) -> Result<Vec<u8>, String> {
     let mut erl_buf = &mut [0u8; 2];
     let res = stdin.lock().read(erl_buf).unwrap();
@@ -95,8 +60,40 @@ fn main() {
     let baud = args[2].parse().unwrap();
 
     let stdin = io::stdin();
-    let stdout = io::stdout();
 
     let mut port = serial::open(port_name).unwrap();
-    interact(&mut port, &stdin, &stdout, baud);
+    let baudrate_translated = translate_baudrate(baud);
+    let settings = serial::PortSettings {
+        baud_rate: baudrate_translated,
+        char_size: serial::Bits8,
+        parity: serial::ParityNone,
+        stop_bits: serial::Stop1,
+        flow_control: serial::FlowNone
+    };
+
+    // Need to look into this, both calls I believe could
+    // return Err, and that should be handled...
+    let _ = port.configure(&settings);
+    let _ = port.set_timeout(Duration::milliseconds(100));
+
+    debug!("port is ready");
+
+    loop {
+        let msg = match parse_msg(&stdin) {
+            Ok(m) => m,
+            _ => continue
+        };
+
+        // supporting only type 3 which is command at the moment
+        // others are:
+        // 1 -> open port (handled earlier)
+        // 2 -> change baud rate
+        // 4 -> sensor message
+        // _ -> uknown so panic
+        //        match port.write(&buf[..]) {
+        let _ = match msg[0] {
+            0x01 => port.write(&msg[1..]),
+            _ => continue
+        };
+    };
 }
