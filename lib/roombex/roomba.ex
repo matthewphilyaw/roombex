@@ -31,21 +31,7 @@ defmodule Roombex.Roomba do
   def handle_cast({:send, command}, port) do
     {:ok, cmd} = Command.transform(command)
 
-    lst_int = for << x :: size(1)-integer-unsigned-unit(8) <- cmd >>, do: x
-
-    {:ok, json} = JSX.encode %{ message_type: 3,
-                                subtype: 0,
-                                data: lst_int }
-
-    Port.command port, json
-
-    {:noreply, port}
-  end
-
-  def handle_cast({:send_read, command}, port) do
-    cmd = Command.transform(command)
-
-    Logger.debug fn -> "not implemented" end
+    Port.command port, cmd
 
     {:noreply, port}
   end

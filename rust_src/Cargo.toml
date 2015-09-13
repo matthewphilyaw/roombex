@@ -1,10 +1,9 @@
 [package]
 name = "roomba_port"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Matthew Philyaw <matthew.philyaw@gmail.com>"]
 
 [dependencies]
-rustc-serialize = "0.3.16"
 log = "0.3.2"
 env_logger = "0.3.1"
 serial = "0.2.0"

@@ -8,24 +8,29 @@ defimpl Roombex.Command, for: Any do
 end
 
 defimpl Roombex.Command, for: Atom do
+  @doc """
+    0x01 is used by the rust port, 0x01 means send only
+    0x02 is send and read from serial port
+  """
+
   def transform(:start) do
-    {:ok, << 128 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 0x01, 128 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:control_mode) do
-    {:ok, << 130 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 0x01, 130 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:safe_mode) do
-    {:ok, << 131 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 0x01, 131 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:full_mode) do
-    {:ok, << 132 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 0x01, 132 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:power) do
-    {:ok, << 133 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 0x01, 133 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(_) do
@@ -71,9 +76,10 @@ defmodule Drive do
         _ -> a
       end
 
-      {:ok, << 137 :: size(1)-big-integer-unsigned-unit(8),
-               s :: size(2)-big-integer-signed-unit(8),
-               a :: size(2)-big-integer-signed-unit(8) >>}
+      {:ok, 
+        << 0x01, 137 :: size(1)-big-integer-unsigned-unit(8),
+           s :: size(2)-big-integer-signed-unit(8),
+           a :: size(2)-big-integer-signed-unit(8) >>}
     end
   end
 end
