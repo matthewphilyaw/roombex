@@ -43,7 +43,6 @@ fn main() {
     let _ = port.configure(&settings);
     let _ = port.set_timeout(Duration::milliseconds(100));
 
-    switch_on_roomba();
     debug!("port is ready");
 
     loop {
@@ -52,11 +51,14 @@ fn main() {
             _ => continue
         };
 
-        // 0x01 -> send only
-        let _ = match msg[0] {
-            0x01 => port.write(&msg[1..]),
-            _ => continue
-        };
+
+        let cmd = msg[0];
+
+        if cmd == 0x8E { continue; } // sensor packet, not used yet
+        else if cmd == 0x01 { switch_on_roomba(); }
+        else {
+            let _ = port.write(&msg[..]);
+        }
     };
 }
 

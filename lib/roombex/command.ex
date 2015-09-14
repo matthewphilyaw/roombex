@@ -8,29 +8,35 @@ defimpl Roombex.Command, for: Any do
 end
 
 defimpl Roombex.Command, for: Atom do
-  @doc """
-    0x01 is used by the rust port, 0x01 means send only
-    0x02 is send and read from serial port
-  """
-
   def transform(:start) do
-    {:ok, << 0x01, 128 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 128 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:control_mode) do
-    {:ok, << 0x01, 130 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 130 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:safe_mode) do
-    {:ok, << 0x01, 131 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 131 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(:full_mode) do
-    {:ok, << 0x01, 132 :: size(1)-big-integer-unsigned-unit(8) >>}
+    {:ok, << 132 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
-  def transform(:power) do
-    {:ok, << 0x01, 133 :: size(1)-big-integer-unsigned-unit(8) >>}
+  def transform(:power_off) do
+    {:ok, << 133 :: size(1)-big-integer-unsigned-unit(8) >>}
+  end
+
+  @doc """
+    doesn't exist in the SCI protocol, but the roomba_port
+    recognizes the 0x01 and if supported on the platform
+    will pull the device line low to turn on roomba. 
+
+    Currently only the raspberry pi has support
+  """
+  def transform(:power_on) do
+    {:ok, << 0x01 :: size(1)-big-integer-unsigned-unit(8) >>}
   end
 
   def transform(_) do
@@ -77,7 +83,7 @@ defmodule Drive do
       end
 
       {:ok, 
-        << 0x01, 137 :: size(1)-big-integer-unsigned-unit(8),
+        << 137 :: size(1)-big-integer-unsigned-unit(8),
            s :: size(2)-big-integer-signed-unit(8),
            a :: size(2)-big-integer-signed-unit(8) >>}
     end

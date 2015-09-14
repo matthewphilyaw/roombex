@@ -29,10 +29,17 @@ defmodule CommandTest do
 
     assert result == expect
   end
-  
-  test ":power transforms to 133 single unsigned byte"do
+
+  test ":power_off transforms to 133 single unsigned byte"do
     expect = {:ok, << 133 :: size(1)-big-integer-unsigned-unit(8) >>}
-    result = Command.transform(:power)
+    result = Command.transform(:power_off)
+
+    assert result == expect
+  end
+
+  test ":power_on transforms to 133 single unsigned byte"do
+    expect = {:ok, << 0x01 :: size(1)-big-integer-unsigned-unit(8) >>}
+    result = Command.transform(:power_on)
 
     assert result == expect
   end
