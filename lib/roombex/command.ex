@@ -93,4 +93,11 @@ end
 defmodule Sleep do
   defstruct val: 0
 
+  defimpl Roombex.Command do
+    def transform(sleep = %Sleep{ val: t }) when t > 0 do
+      {:ok, sleep}
+    end
+
+    def transform(_), do: {:error, "sleep val must be greater than 0"}
+  end
 end

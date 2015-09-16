@@ -29,9 +29,7 @@ defmodule Roombex.Roomba do
   end
 
   def handle_cast({:send, command}, port) do
-    {:ok, cmd} = Command.transform(command)
-
-    Port.command port, cmd
+    Port.command port, command
 
     {:noreply, port}
   end

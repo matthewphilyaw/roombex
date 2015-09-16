@@ -2,22 +2,30 @@ defmodule Roombex.Pilot do
   require Logger
   use GenServer
   alias Roombex.Roomba
+  alias Roombex.Command
 
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, name: :roomba_pilot)
   end
 
-  def do_commands([]) do
+  def do_actions([]) do
     :ok
   end
 
-  def do_commands(commands) when is_list(commands) do
-    GenServer.cast(:roomba_pilot, {:do_commands, commands})
-    :ok
+  def do_actions(actions) when is_list(actions) do
+    cmds = Enum.map actions, fn (action) -> Command.transform(action) end
+
+    # filter for erros, if any abort and return errors
+    errs = Enum.filter cmds, fn (cmd) -> elem(cmd, 0) == :error end
+    case Enum.count(errs) do
+      0 ->
+        GenServer.cast(:roomba_pilot, {:do_commands, Enum.map(cmds, fn (cmd) -> elem(cmd, 1) end)})
+        :ok
+      _ -> {:error, errs}
+    end
   end
 
   # --- callbacks
-
   def init(:ok) do
     {:ok, []}
   end
